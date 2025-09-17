@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    h1 {
+      color: #333;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 10px;
+    }
+    
+    .list-section {
+      flex: 2;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    
+    input, textarea, select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+    
+    textarea {
+      height: 60px;
+      resize: vertical;
+    }
+    
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    
+    .checkbox-group input {
+      width: auto;
+    }
+    
+    button {
+      padding: 10px 15px;
+      background-color: #4285f4;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    
+    button:hover {
+      background-color: #3367d6;
+    }
+    
+    .btn-add {
+      background-color: #34a853;
+    }
+    
+    .btn-add:hover {
+      background-color: #2e8b47;
+    }
+    
+    .btn-danger {
+      background-color: #ea4335;
+    }
+    
+    .btn-danger:hover {
+      background-color: #d33a2c;
+    }
+    
+    .btn-warning {
+      background-color: #fbbc05;
+    }
+    
+    .btn-warning:hover {
+      background-color: #e6ac00;
+    }
+    
+    .icon {
+      font-weight: bold;
+    }
+    
+    .link-list {
+      list-style: none;
+      padding: 0;
+    }
+    
+    .link-item {
+      padding: 15px;
+      border: 1px solid #eee;
+      border-radius: 4px;
+      margin-bottom: 10px;
+      background-color: #fff;
+    }
+    
+    .link-title {
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    
+    .link-url {
+      color: #4285f4;
+      font-size: 14px;
+      margin-bottom: 10px;
+      word-break: break-all;
+    }
+    
+    .link-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 10px;
+    }
+    
+    .link-actions {
+      display: flex;
+      gap: 10px;
+    }
+    
+    .action-btn {
+      padding: 5px 10px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+    
+    .search-box {
+      margin-bottom: 20px;
+      display: flex;
+      gap: 10px;
+    }
+    
+    .search-box input {
+      flex: 1;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #999;
+    }
+    
+    /* 弹窗样式 */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.4);
+    }
+    
+    .modal-content {
+      background-color: #fefefe;
+      margin: 10% auto;
+      padding: 20px;
+      border: 1px solid #888;
+      border-radius: 8px;
+      width: 80%;
+      max-width: 500px;
+    }
+    
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
+    .close {
+      color: #aaa;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    
+    .close:hover {
+      color: black;
+    }
+    
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+  </style>
+</head>
+<body>
+  <h1>定时链接管理器</h1>
+  
+  <div class="list-section">
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="搜索链接...">
+      <button id="addLinkBtn" class="btn-add">
+        <span class="icon">+</span>
+        添加链接
+      </button>
+    </div>
+    
+    <div id="linksList">
+      <ul class="link-list" id="linkList">
+        <!-- 链接列表将在这里显示 -->
+      </ul>
+    </div>
+  </div>
+  
+  <!-- 添加/编辑链接弹窗 -->
+  <div id="linkModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalTitle">添加链接</h2>
+        <span class="close">&times;</span>
+      </div>
+      <form id="linkForm">
+        <input type="hidden" id="linkId">
+        
+        <div class="form-group">
+          <label for="linkTitle">链接标题:</label>
+          <input type="text" id="linkTitle" placeholder="输入链接标题" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="linkUrl">链接地址:</label>
+          <input type="url" id="linkUrl" placeholder="https://example.com" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="scheduledTime">定时访问时间:</label>
+          <input type="time" id="scheduledTime" value="20:00" required>
+        </div>
+        
+        <div class="form-group">
+          <div class="checkbox-group">
+            <input type="checkbox" id="repeatDaily" checked>
+            <label for="repeatDaily">每天重复提醒</label>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="linkNotes">备注:</label>
+          <textarea id="linkNotes" placeholder="添加备注信息"></textarea>
+        </div>
+        
+        <div class="modal-actions">
+          <button type="button" id="cancelBtn">
+            <span class="icon">✕</span>
+            取消
+          </button>
+          <button type="submit" id="saveBtn">
+            <span class="icon">💾</span>
+            保存配置
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  <script src="options.js"></script>
+</body>
+</html>
