@@ -8,47 +8,47 @@
       padding: 20px;
       font-family: Arial, sans-serif;
     }
-    
+
     .container {
       display: flex;
       flex-direction: column;
       gap: 15px;
     }
-    
+
     h2 {
       margin: 0;
       font-size: 18px;
       color: #333;
     }
-    
+
     .form-group {
       display: flex;
       flex-direction: column;
       gap: 5px;
     }
-    
+
     label {
       font-weight: bold;
       font-size: 14px;
     }
-    
+
     input, textarea {
       padding: 8px;
       border: 1px solid #ccc;
       border-radius: 4px;
       font-size: 14px;
     }
-    
+
     .checkbox-group {
       display: flex;
       align-items: center;
       gap: 5px;
     }
-    
+
     .checkbox-group input {
       width: auto;
     }
-    
+
     button {
       padding: 10px;
       background-color: #4285f4;
@@ -62,26 +62,26 @@
       justify-content: center;
       gap: 5px;
     }
-    
+
     button:hover {
       background-color: #3367d6;
     }
-    
+
     .icon {
       font-weight: bold;
     }
-    
+
     .manage-section {
       border-top: 1px solid #eee;
       padding-top: 15px;
       margin-top: 10px;
     }
-    
+
     .manage-section button {
       background-color: #f1f1f1;
       color: #333;
     }
-    
+
     .manage-section button:hover {
       background-color: #e0e0e0;
     }
@@ -89,37 +89,56 @@
 </head>
 <body>
   <div class="container">
-    <h2>定时链接管理器</h2>
-    
+    <h2>定时链接管理器1.2</h2>
+
     <div id="captureSection">
       <div class="form-group">
         <label for="linkTitle">链接标题:</label>
         <input type="text" id="linkTitle" placeholder="输入链接标题">
       </div>
-      
+
       <div class="form-group">
         <label for="linkUrl">链接地址:</label>
         <input type="text" id="linkUrl" placeholder="输入链接地址">
       </div>
-      
+
       <div class="form-group">
         <label for="scheduledTime">定时访问时间:</label>
         <input type="time" id="scheduledTime" value="20:00">
       </div>
-      
+
+      <div class="form-group">
+        <label for="linkGroup">分组:</label>
+        <input type="text" id="linkGroup" placeholder="输入分组名称(默认为'默认分组')" list="groupSuggestions">
+        <datalist id="groupSuggestions">
+        </datalist>
+      </div>
+
       <div class="form-group">
         <div class="checkbox-group">
           <input type="checkbox" id="repeatDaily" checked>
           <label for="repeatDaily">每天重复提醒</label>
         </div>
       </div>
-      
+
+      <div class="form-group">
+        <div class="checkbox-group">
+          <input type="checkbox" id="autoClose">
+          <label for="autoClose">自动关闭标签页</label>
+        </div>
+      </div>
+
+      <div class="form-group" id="autoCloseDelayGroup" style="display: none;">
+        <label for="autoCloseDelay">关闭延迟(秒):</label>
+        <input type="number" id="autoCloseDelay" min="1" max="300" value="5" placeholder="默认5秒">
+      </div>
+
       <button id="saveBtn">
         <span class="icon">💾</span>
         保存配置
       </button>
     </div>
-    
+
     <div class="manage-section">
       <button id="manageLinksBtn">
         <span class="icon">⚙️</span>
@@ -127,7 +146,7 @@
       </button>
     </div>
   </div>
-  
+
   <script src="popup.js"></script>
 </body>
 </html>

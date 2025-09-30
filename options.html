@@ -9,27 +9,27 @@
       margin: 0 auto;
       padding: 20px;
     }
-    
+
     h1 {
       color: #333;
       border-bottom: 1px solid #eee;
       padding-bottom: 10px;
     }
-    
+
     .list-section {
       flex: 2;
     }
-    
+
     .form-group {
       margin-bottom: 15px;
     }
-    
+
     label {
       display: block;
       margin-bottom: 5px;
       font-weight: bold;
     }
-    
+
     input, textarea, select {
       width: 100%;
       padding: 8px;
@@ -38,22 +38,22 @@
       font-size: 14px;
       box-sizing: border-box;
     }
-    
+
     textarea {
       height: 60px;
       resize: vertical;
     }
-    
+
     .checkbox-group {
       display: flex;
       align-items: center;
       gap: 5px;
     }
-    
+
     .checkbox-group input {
       width: auto;
     }
-    
+
     button {
       padding: 10px 15px;
       background-color: #4285f4;
@@ -66,44 +66,56 @@
       align-items: center;
       gap: 5px;
     }
-    
+
     button:hover {
       background-color: #3367d6;
     }
-    
+
     .btn-add {
       background-color: #34a853;
     }
-    
+
     .btn-add:hover {
       background-color: #2e8b47;
     }
-    
+
     .btn-danger {
       background-color: #ea4335;
     }
-    
+
     .btn-danger:hover {
       background-color: #d33a2c;
     }
-    
+
     .btn-warning {
       background-color: #fbbc05;
     }
-    
+
     .btn-warning:hover {
       background-color: #e6ac00;
     }
-    
+
     .icon {
       font-weight: bold;
     }
-    
+
+    .group-section {
+      margin-bottom: 30px;
+    }
+
+    .group-title {
+      color: #333;
+      font-size: 18px;
+      margin: 20px 0 10px 0;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #4285f4;
+    }
+
     .link-list {
       list-style: none;
       padding: 0;
     }
-    
+
     .link-item {
       padding: 15px;
       border: 1px solid #eee;
@@ -111,20 +123,20 @@
       margin-bottom: 10px;
       background-color: #fff;
     }
-    
+
     .link-title {
       font-size: 16px;
       font-weight: bold;
       margin-bottom: 5px;
     }
-    
+
     .link-url {
       color: #4285f4;
       font-size: 14px;
       margin-bottom: 10px;
       word-break: break-all;
     }
-    
+
     .link-meta {
       display: flex;
       justify-content: space-between;
@@ -132,12 +144,12 @@
       color: #666;
       margin-bottom: 10px;
     }
-    
+
     .link-actions {
       display: flex;
       gap: 10px;
     }
-    
+
     .action-btn {
       padding: 5px 10px;
       font-size: 12px;
@@ -145,23 +157,23 @@
       align-items: center;
       gap: 3px;
     }
-    
+
     .search-box {
       margin-bottom: 20px;
       display: flex;
       gap: 10px;
     }
-    
+
     .search-box input {
       flex: 1;
     }
-    
+
     .empty-state {
       text-align: center;
       padding: 40px;
       color: #999;
     }
-    
+
     /* 弹窗样式 */
     .modal {
       display: none;
@@ -173,7 +185,7 @@
       height: 100%;
       background-color: rgba(0,0,0,0.4);
     }
-    
+
     .modal-content {
       background-color: #fefefe;
       margin: 10% auto;
@@ -183,25 +195,25 @@
       width: 80%;
       max-width: 500px;
     }
-    
+
     .modal-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 20px;
     }
-    
+
     .close {
       color: #aaa;
       font-size: 28px;
       font-weight: bold;
       cursor: pointer;
     }
-    
+
     .close:hover {
       color: black;
     }
-    
+
     .modal-actions {
       display: flex;
       gap: 10px;
@@ -210,24 +222,33 @@
   </style>
 </head>
 <body>
-  <h1>定时链接管理器</h1>
-  
+  <h1>定时链接管理器1.2</h1>
+
   <div class="list-section">
     <div class="search-box">
       <input type="text" id="searchInput" placeholder="搜索链接...">
+      <input type="file" id="importFile" accept=".json" style="display: none;">
+      <button id="importBtn" class="btn-warning">
+        <span class="icon">📤</span>
+        导入配置
+      </button>
+      <button id="exportBtn" class="btn-warning">
+        <span class="icon">📥</span>
+        导出配置
+      </button>
       <button id="addLinkBtn" class="btn-add">
         <span class="icon">+</span>
         添加链接
       </button>
     </div>
-    
+
     <div id="linksList">
       <ul class="link-list" id="linkList">
         <!-- 链接列表将在这里显示 -->
       </ul>
     </div>
   </div>
-  
+
   <!-- 添加/编辑链接弹窗 -->
   <div id="linkModal" class="modal">
     <div class="modal-content">
@@ -237,34 +258,53 @@
       </div>
       <form id="linkForm">
         <input type="hidden" id="linkId">
-        
+
         <div class="form-group">
           <label for="linkTitle">链接标题:</label>
           <input type="text" id="linkTitle" placeholder="输入链接标题" required>
         </div>
-        
+
         <div class="form-group">
           <label for="linkUrl">链接地址:</label>
           <input type="url" id="linkUrl" placeholder="https://example.com" required>
         </div>
-        
+
         <div class="form-group">
           <label for="scheduledTime">定时访问时间:</label>
           <input type="time" id="scheduledTime" value="20:00" required>
         </div>
-        
+
+        <div class="form-group">
+          <label for="linkGroup">分组:</label>
+          <input type="text" id="linkGroup" placeholder="输入分组名称(默认为'默认分组')" list="groupSuggestions">
+          <datalist id="groupSuggestions">
+          </datalist>
+        </div>
+
         <div class="form-group">
           <div class="checkbox-group">
             <input type="checkbox" id="repeatDaily" checked>
             <label for="repeatDaily">每天重复提醒</label>
           </div>
         </div>
-        
+
+        <div class="form-group">
+          <div class="checkbox-group">
+            <input type="checkbox" id="autoClose">
+            <label for="autoClose">自动关闭标签页</label>
+          </div>
+        </div>
+
+        <div class="form-group" id="autoCloseDelayGroup" style="display: none;">
+          <label for="autoCloseDelay">关闭延迟(秒):</label>
+          <input type="number" id="autoCloseDelay" min="1" max="300" value="5" placeholder="默认5秒">
+        </div>
+
         <div class="form-group">
           <label for="linkNotes">备注:</label>
           <textarea id="linkNotes" placeholder="添加备注信息"></textarea>
         </div>
-        
+
         <div class="modal-actions">
           <button type="button" id="cancelBtn">
             <span class="icon">✕</span>
@@ -278,7 +318,7 @@
       </form>
     </div>
   </div>
-  
+
   <script src="options.js"></script>
 </body>
 </html>

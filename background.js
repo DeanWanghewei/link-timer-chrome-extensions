@@ -5,7 +5,7 @@ let capturedLinkData = null;
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({
     id: "addScheduledLink",
-    title: "添加到定时链接管理器",
+    title: "添加到定时链接管理器1.2",
     contexts: ["link"]
   });
 });
@@ -18,7 +18,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
       url: info.linkUrl,
       title: tab.title
     };
-    
+
     // 发送消息到所有内容脚本（如果有的话）
     chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
       if (tabs[0]) {
@@ -33,7 +33,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
         });
       }
     });
-    
+
     // 打开弹出窗口
     chrome.action.openPopup();
   }
@@ -90,11 +90,14 @@ async function saveLink(linkData) {
     title: linkData.title,
     scheduledTime: linkData.scheduledTime,
     repeatDaily: linkData.repeatDaily || false, // 是否每天重复
+    group: linkData.group || '默认分组', // 分组名称
+    autoClose: linkData.autoClose || false, // 是否自动关闭
+    autoCloseDelay: linkData.autoCloseDelay || 5, // 关闭延迟（秒）
     createdAt: new Date().toISOString()
   };
-  
+
   await chrome.storage.local.set({ links });
-  
+
   // 创建定时任务
   createAlarm(id, linkData.scheduledTime, linkData.repeatDaily);
 }
@@ -110,7 +113,7 @@ async function deleteLink(id) {
   const links = await getLinks();
   delete links[id];
   await chrome.storage.local.set({ links });
-  
+
   // 清除对应的定时任务
   chrome.alarms.clear(id);
 }
@@ -120,7 +123,7 @@ async function updateLink(linkData) {
   const links = await getLinks();
   links[linkData.id] = linkData;
   await chrome.storage.local.set({ links });
-  
+
   // 更新定时任务
   chrome.alarms.clear(linkData.id);
   createAlarm(linkData.id, linkData.scheduledTime, linkData.repeatDaily);
@@ -149,9 +152,19 @@ chrome.alarms.onAlarm.addListener((alarm) => {
   getLinks().then((links) => {
     const link = links[alarm.name];
     if (link) {
-      // 直接打开链接
-      chrome.tabs.create({ url: link.url });
-      
+      // 打开链接
+      chrome.tabs.create({ url: link.url }, (tab) => {
+        // 如果启用了自动关闭功能
+        if (link.autoClose) {
+          const delay = (link.autoCloseDelay || 5) * 1000; // 转换为毫秒
+          setTimeout(() => {
+            chrome.tabs.remove(tab.id).catch((error) => {
+              console.error("关闭标签页失败:", error);
+            });
+          }, delay);
+        }
+      });
+
       // 如果是每天重复的任务，更新下次执行时间
       if (link.repeatDaily) {
         const nextTime = new Date(link.scheduledTime);
