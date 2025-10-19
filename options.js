@@ -237,7 +237,7 @@ function displayLinks(links, searchTerm = '') {
             <button class="action-btn" data-action="edit" data-id="${link.id}">编辑</button>
             <button class="action-btn" data-action="open" data-url="${escapeHtml(link.url)}">打开</button>
             <label class="alarm-switch-label">
-              <span>Alarm</span>
+              <span>自动定时</span>
               <input type="checkbox" class="alarm-switch" data-action="toggle-alarm" data-id="${link.id}" ${link.alarmEnabled !== false ? 'checked' : ''}>
               <span class="slider"></span>
             </label>
