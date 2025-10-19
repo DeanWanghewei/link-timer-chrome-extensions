@@ -1,13 +1,56 @@
 # 更新日志 (Changelog)
 
+## [1.5.1] - 2025-01-18
+
+### 🐛🐛🐛 超级重大修复 (CRITICAL FIX)
+- **修复每天重复任务指数级增长的严重 BUG** - 这是导致链接重复打开越来越多的**根本原因**！
+  - **问题**：`repeatDaily` 任务触发后错误地调用了 `updateLink(link)` (background.js:264-268)
+  - **后果**：每次触发都会创建新的 alarm，导致 alarm 指数增长（1→2→4→8→16...）
+  - **修复**：移除 `repeatDaily` 任务触发后的 `updateLink` 调用
+  - **原理**：Chrome alarms 的 `periodInMinutes` 已经自动处理重复，无需手动更新
+
+  **修复前**：
+  ```javascript
+  // ❌ 严重错误：每次触发都创建新 alarm
+  if (link.repeatDaily) {
+    link.scheduledTime = nextTime.toISOString();
+    updateLink(link);  // 会创建新 alarm！导致指数增长
+  }
+  ```
+
+  **修复后**：
+  ```javascript
+  // ✅ 正确：让 Chrome 自动处理重复
+  if (!link.repeatDaily) {
+    deleteLink(alarm.name);  // 只删除一次性任务
+  }
+  // repeatDaily 任务由 Chrome 的 periodInMinutes 自动处理
+  ```
+
+- **修复导入配置时创建重复 alarm** - 解决导入后立即重复打开的问题
+  - 修改 `importLinks` 只为新导入的链接创建 alarm (options.js:406-451)
+  - 改进 ID 生成避免冲突：`timestamp + index + random`
+  - 添加缺失字段：`autoClose`, `autoCloseDelay`, `alarmEnabled`
+
+### 📚 新增文档
+- `fix-repeat-alarms.md` - 详细说明重复任务 bug 的原因和修复方法
+- `debug-alarms.md` - 诊断 alarm 问题的完整步骤
+
+### 🚨 重要提示
+如果你已经运行过旧版本，**必须执行清理操作**：
+1. 打开控制台运行：`chrome.storage.local.clear()` 和 `chrome.alarms.clearAll()`
+2. 重新加载扩展
+3. 重新导入配置
+
+---
+
 ## [1.5] - 2025-01-18
 
 ### 🐛 重大修复 (Critical Fix)
-- **彻底修复链接重复打开问题** - 解决了竞态条件导致的 alarm 重复创建
+- **修复链接重复打开问题** - 解决了竞态条件导致的 alarm 重复创建
   - 将 `createAlarm()` 函数改为 async/await 模式 (background.js:213-242)
   - 移除 `updateLink()` 中的双重清除逻辑，避免竞态条件
   - 所有调用 `createAlarm` 的地方都使用 await 确保顺序执行
-  - 修复重复任务触发时的循环创建问题
 
 ### ✨ 新增 (Added)
 - **开关式 Alarm 控制** - 用开关替代删除按钮，更直观易用

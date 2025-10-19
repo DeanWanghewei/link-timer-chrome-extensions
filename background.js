@@ -5,7 +5,7 @@ let capturedLinkData = null;
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({
     id: "addScheduledLink",
-    title: "添加到定时链接管理器1.5",
+    title: "添加到定时链接管理器 1.5.1",
     contexts: ["link"]
   });
 
@@ -260,16 +260,11 @@ chrome.alarms.onAlarm.addListener((alarm) => {
         }
       });
 
-      // 如果是每天重复的任务，更新下次执行时间
-      if (link.repeatDaily) {
-        const nextTime = new Date(link.scheduledTime);
-        nextTime.setDate(nextTime.getDate() + 1);
-        link.scheduledTime = nextTime.toISOString();
-        updateLink(link);
-      } else {
-        // 非重复任务触发后自动删除
+      // 如果不是每天重复的任务，触发后自动删除
+      if (!link.repeatDaily) {
         deleteLink(alarm.name);
       }
+      // repeatDaily 任务由 Chrome alarms 的 periodInMinutes 自动处理，无需手动更新
     } else {
       // 如果找不到对应的链接，清除这个孤立的alarm
       console.warn(`发现孤立的alarm: ${alarm.name}，已清除`);
