@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const importBtn = document.getElementById('importBtn');
   const importFile = document.getElementById('importFile');
   const exportBtn = document.getElementById('exportBtn');
+  const cleanupBtn = document.getElementById('cleanupBtn'); // 可能为null，如果按钮被注释
   const linkModal = document.getElementById('linkModal');
   const modalTitle = document.getElementById('modalTitle');
   const closeBtn = document.querySelector('.close');
@@ -132,6 +133,13 @@ document.addEventListener('DOMContentLoaded', function() {
     exportLinks();
   });
 
+  // 清理按钮事件（只在按钮存在时添加）
+  if (cleanupBtn) {
+    cleanupBtn.addEventListener('click', () => {
+      cleanupAlarms();
+    });
+  }
+
   // 加载链接列表
   loadLinks();
 });
@@ -228,6 +236,11 @@ function displayLinks(links, searchTerm = '') {
           <div class="link-actions">
             <button class="action-btn" data-action="edit" data-id="${link.id}">编辑</button>
             <button class="action-btn" data-action="open" data-url="${escapeHtml(link.url)}">打开</button>
+            <label class="alarm-switch-label">
+              <span>Alarm</span>
+              <input type="checkbox" class="alarm-switch" data-action="toggle-alarm" data-id="${link.id}" ${link.alarmEnabled !== false ? 'checked' : ''}>
+              <span class="slider"></span>
+            </label>
             <button class="action-btn btn-danger" data-action="delete" data-id="${link.id}">删除</button>
           </div>
         </li>
@@ -267,6 +280,25 @@ function displayLinks(links, searchTerm = '') {
           }
         });
       }
+    });
+  });
+
+  linkList.querySelectorAll('[data-action="toggle-alarm"]').forEach(checkbox => {
+    checkbox.addEventListener('change', () => {
+      const enabled = checkbox.checked;
+      chrome.runtime.sendMessage({
+        type: "TOGGLE_ALARM",
+        id: checkbox.dataset.id,
+        enabled: enabled
+      }, (response) => {
+        if (response && response.success) {
+          console.log(`Alarm已${enabled ? '启用' : '禁用'}`);
+        } else {
+          alert('切换失败: ' + (response ? response.error : '未知错误'));
+          // 恢复开关状态
+          checkbox.checked = !enabled;
+        }
+      });
     });
   });
 }
@@ -371,18 +403,19 @@ function importLinks(file) {
         let importCount = 0;
         let skipCount = 0;
         const now = new Date().toISOString();
+        const newLinks = [];  // 记录新导入的链接
 
-        importedData.forEach(link => {
+        importedData.forEach((link, index) => {
           // 验证必需字段
           if (!link.url || !link.title || !link.scheduledTime) {
             skipCount++;
             return;
           }
 
-          // 生成新ID
-          const id = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+          // 生成新ID - 使用时间戳 + 索引 + 随机数，避免冲突
+          const id = Date.now().toString() + '_' + index + '_' + Math.random().toString(36).substr(2, 9);
 
-          links[id] = {
+          const newLink = {
             id: id,
             url: link.url,
             title: link.title,
@@ -390,19 +423,30 @@ function importLinks(file) {
             group: link.group || '默认分组',
             repeatDaily: link.repeatDaily || false,
             notes: link.notes || '',
+            autoClose: link.autoClose || false,
+            autoCloseDelay: link.autoCloseDelay || 5,
+            alarmEnabled: true,  // 默认启用
             createdAt: now  // 使用导入时间作为创建时间
           };
 
+          links[id] = newLink;
+          newLinks.push(newLink);  // 添加到新链接列表
           importCount++;
         });
 
         // 保存到storage
         chrome.storage.local.set({ links }, () => {
-          // 重新创建所有定时任务
-          Object.values(links).forEach(link => {
+          // ✅ 只为新导入的链接创建 alarm
+          let createdCount = 0;
+          newLinks.forEach(link => {
             chrome.runtime.sendMessage({
               type: "UPDATE_LINK",
               data: link
+            }, (response) => {
+              createdCount++;
+              if (createdCount === newLinks.length) {
+                console.log(`导入完成：为 ${newLinks.length} 个链接创建了 alarm`);
+              }
             });
           });
 
@@ -469,6 +513,81 @@ function exportLinks() {
 
     } else {
       alert('导出失败，请重试');
+    }
+  });
+}
+
+// 清理历史配置（清除孤立的alarms）
+function cleanupAlarms() {
+  // 第一步：检查当前的alarms状态
+  chrome.runtime.sendMessage({
+    type: "CHECK_ALARMS"
+  }, (checkResult) => {
+    if (!checkResult || !checkResult.success) {
+      alert('检查失败: ' + (checkResult ? checkResult.error : '未知错误'));
+      return;
+    }
+
+    // 计算有效的alarm数量
+    const validAlarms = checkResult.validAlarms || [];
+    const orphanAlarms = checkResult.orphanAlarms || [];
+
+    // 构建详细信息
+    let message = '=== Alarm 检查结果 ===\n\n';
+    message += `总Alarm数量: ${checkResult.total}\n`;
+    message += `├─ 有效的Alarm: ${validAlarms.length}\n`;
+    message += `└─ 孤立的Alarm: ${orphanAlarms.length}\n`;
+    message += `\n当前链接数量: ${checkResult.linkCount}\n\n`;
+
+    // 注意：chrome.alarms.getAll() 只返回本扩展的 alarms
+    message += `💡 提示: Chrome alarms 是按扩展隔离的\n`;
+    message += `   这里显示的所有 alarm 都属于本扩展\n\n`;
+
+    // 显示孤立的alarms（不在管理列表中的）
+    if (orphanAlarms.length > 0) {
+      message += '--- 孤立的Alarm（不在管理列表中）---\n';
+      orphanAlarms.forEach(alarm => {
+        const time = alarm.scheduledTime ? new Date(alarm.scheduledTime).toLocaleString() : '无';
+        const period = alarm.periodInMinutes ? `每${alarm.periodInMinutes}分钟` : '一次性';
+        message += `• ID: ${alarm.name} (${time}, ${period})\n`;
+      });
+      message += '\n';
+    } else {
+      message += '✅ 没有发现孤立的Alarm\n\n';
+    }
+
+    // 显示检查结果
+    alert(message);
+
+    // 如果有孤立的alarms，询问是否清理
+    if (orphanAlarms.length > 0) {
+      const confirmCleanup = confirm(
+        `发现 ${orphanAlarms.length} 个孤立的Alarm（不在管理列表中）。\n\n` +
+        '这些孤立的Alarm可能会导致重复打开链接。\n\n' +
+        '⚠️  即将执行的操作：\n' +
+        `1. 清除所有 ${checkResult.total} 个 Alarm\n` +
+        `2. 为 ${checkResult.linkCount} 个链接重新创建Alarm\n\n` +
+        '是否继续清理？'
+      );
+
+      if (confirmCleanup) {
+        // 执行清理
+        chrome.runtime.sendMessage({
+          type: "CLEANUP_ALARMS"
+        }, (response) => {
+          if (response && response.success) {
+            alert(
+              '✅ 清理成功！\n\n' +
+              `已清除 ${orphanAlarms.length} 个孤立的Alarm\n` +
+              `已为 ${checkResult.linkCount} 个链接重新创建Alarm\n\n` +
+              '您可以打开浏览器控制台查看详细的清理日志。'
+            );
+            loadLinks();
+          } else {
+            alert('清理失败: ' + (response ? response.error : '未知错误'));
+          }
+        });
+      }
     }
   });
 }

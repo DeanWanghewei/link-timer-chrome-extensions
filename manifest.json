@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Link Timer",
-  "version": "1.2",
+  "version": "1.5",
   "description": "一个可以定时提醒访问链接的Chrome扩展",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAroL0tD6s82DcwnafkHGtjZuAhjY3bi62KP0HE2shQZ+6GJgBapcKjehai2FB+4rJGTNBlavDfsa5tTt3K6iNeEhTzuMaf9cDs6qFh/Amzu5iLN1t85pUwQYirVeb0kKwH3qu7Q6cw+vxYvOrOGHJeD4gVr3aSs92Z0D5TcW/tx9IGnHEOvUbsQ1UKwRgxKolAP8ClVBre6P8D9jrKiJl5K4oUz7RKqLevAKL6ud/ysIobU3l/4kSi6JHZsSrBY/E1e+vtLqwhNpgrqijmea7CGp7LO0rHy1QK4mqowhygqnOjMPFctkv5sSvoULlTr/PUQhCIqVK9/QzVbLjiuDutwIDAQAB",
   "icons": {

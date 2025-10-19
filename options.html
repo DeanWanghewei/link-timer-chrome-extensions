@@ -219,10 +219,64 @@
       gap: 10px;
       justify-content: flex-end;
     }
+
+    /* Toggle Switch 样式 */
+    .alarm-switch-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      padding: 5px 10px;
+      background-color: #f0f0f0;
+      border-radius: 4px;
+      position: relative;
+      font-size: 12px;
+    }
+
+    .alarm-switch-label input[type="checkbox"] {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .alarm-switch-label .slider {
+      position: relative;
+      display: inline-block;
+      width: 40px;
+      height: 20px;
+      background-color: #ccc;
+      border-radius: 20px;
+      transition: background-color 0.3s;
+    }
+
+    .alarm-switch-label .slider::before {
+      content: '';
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      left: 2px;
+      top: 2px;
+      background-color: white;
+      border-radius: 50%;
+      transition: transform 0.3s;
+    }
+
+    .alarm-switch-label input:checked + .slider {
+      background-color: #4285f4;
+    }
+
+    .alarm-switch-label input:checked + .slider::before {
+      transform: translateX(20px);
+    }
+
+    .alarm-switch-label:hover .slider {
+      opacity: 0.8;
+    }
   </style>
 </head>
 <body>
-  <h1>定时链接管理器1.2</h1>
+  <h1>定时链接管理器1.5</h1>
 
   <div class="list-section">
     <div class="search-box">
@@ -235,6 +289,10 @@
       <button id="exportBtn" class="btn-warning">
         <span class="icon">📥</span>
         导出配置
+      </button>
+      <button id="cleanupBtn" class="btn-danger">
+        <span class="icon">🧹</span>
+        检查Alarms
       </button>
       <button id="addLinkBtn" class="btn-add">
         <span class="icon">+</span>
